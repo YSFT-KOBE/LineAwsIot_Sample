@@ -1,0 +1,28 @@
+{
+    "aaa": "aaa",
+    "deviceInfo": {
+        "deviceId": "XXXXXXXXXXXXXXXX",
+        "type": "button",
+        "remainingLife": 46.09387,
+        "attributes": {
+            "projectRegion": "ap-northeast-1",
+            "projectName": "ProjectName",
+            "placementName": "PlacementName",
+            "deviceTemplateName": "DeviceName"
+        }
+    },
+    "deviceEvent": {
+        "buttonClicked": {
+            "clickType": "SINGLE",
+            "reportedTime": "2019-09-16T08:36:55.058Z"
+        }
+    },
+    "placementInfo": {
+        "projectName": "ProjectName",
+        "placementName": "PlacementName",
+        "attributes": {},
+        "devices": {
+            "DeviceName": "XXXXXXXXXXXXXXXX"
+        }
+    }
+}

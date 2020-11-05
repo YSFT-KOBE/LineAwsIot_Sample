@@ -1,0 +1,24 @@
+{
+    "eventTime": 1601746428319,
+    "payload": {
+        "actionExecutionId": "00000000-0000-3dc1-9332-55589863cdd5",
+        "detector": {
+            "detectorModelName": "PowerON-Observation",
+            "keyValue": null,
+            "detectorModelVersion": "8"
+        },
+        "eventTriggerDetails": {
+            "inputName": null,
+            "messageId": null,
+            "triggerType": "Timer"
+        },
+        "state": {
+            "stateName": "PowerON",
+            "variables": {},
+            "timers": {
+                "poweron_check_timer": 1601746428
+            }
+        }
+    },
+    "eventName": "tout_poweron_check_timer"
+}

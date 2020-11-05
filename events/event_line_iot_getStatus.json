@@ -1,0 +1,38 @@
+{
+  "version": "2.0",
+  "routeKey": "POST /line",
+  "rawPath": "/line",
+  "rawQueryString": "",
+  "headers": {
+      "accept-encoding": "gzip,deflate",
+      "content-length": "722",
+      "content-type": "application/json",
+      "host": "0123456789.execute-api.ap-northeast-1.amazonaws.com",
+      "user-agent": "LINE-Developers/0.1",
+      "x-amzn-trace-id": "Root=1-5f18f8d8-4404195cc2896fecc24b53f4",
+      "x-forwarded-for": "169.254.169.254",
+      "x-forwarded-port": "443",
+      "x-forwarded-proto": "https",
+      "x-line-signature": ""
+  },
+  "requestContext": {
+      "accountId": "xxxxxxxxxxxx",
+      "apiId": "0123456789",
+      "domainName": "0123456789.execute-api.ap-northeast-1.amazonaws.com",
+      "domainPrefix": "0123456789",
+      "http": {
+          "method": "POST",
+          "path": "/line",
+          "protocol": "HTTP/1.1",
+          "sourceIp": "169.254.169.254",
+          "userAgent": "LINE-Developers/0.1"
+      },
+      "requestId": "QGvR6ghStjMEPQQ=",
+      "routeKey": "POST /line",
+      "stage": "$default",
+      "time": "23/Jul/2020:02:41:28 +0000",
+      "timeEpoch": 1595472088949
+  },
+  "body": "{\n  \"events\": [\n    {\n      \"replyToken\": \"00000000000000000000000000000000\",\n      \"type\": \"message\",\n      \"timestamp\": 1595472088940,\n      \"source\": {\n        \"type\": \"user\",\n        \"userId\": \"beefdeadbeefdeadbeefde\"\n      },\n      \"message\": {\n        \"id\": \"100001\",\n        \"type\": \"text\",\n        \"text\": \"点灯状態\"\n      }\n    },\n    {\n      \"replyToken\": \"ffffffffffffffffffffffffffffffff\",\n      \"type\": \"message\",\n      \"timestamp\": 1595472088940,\n      \"source\": {\n        \"type\": \"user\",\n        \"userId\": \"beefdeadbeefdeadbeefde\"\n      },\n      \"message\": {\n        \"id\": \"100002\",\n        \"type\": \"sticker\",\n        \"packageId\": \"1\",\n        \"stickerId\": \"1\"\n      }\n    }\n  ]\n}\n",
+  "isBase64Encoded": false
+}

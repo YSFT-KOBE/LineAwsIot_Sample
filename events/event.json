@@ -1,0 +1,16 @@
+{
+  "state": {
+      "reported": {
+          "powerOn": 0
+      }
+  },
+  "metadata": {
+      "desired": {
+          "powerOn": {
+              "timestamp": 1596939542
+          }
+      }
+  },
+  "version": 32,
+  "timestamp": 1596939542
+}

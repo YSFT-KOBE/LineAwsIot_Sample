@@ -1,0 +1,368 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  line_aws_iot
+
+  Sample SAM Template for line_aws_iot
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 10
+
+Resources:
+  IoTLinePushRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      RoleName: line-aws-iot-iot-line-push-role
+
+  IoTEventsPowerOnDetectRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      RoleName: line-aws-iot-iotevents-poweron-detect-role
+
+
+  ButtonIotRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      RoleName: line-aws-iot-button-iot-role
+
+  LineGetStatusRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      RoleName: line-aws-iot-line-getStatus-iot-role
+
+  IotCorePowerOnStatusNotifyRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - iot.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      RoleName: line-aws-iot-iotcore-poweron-notify-role
+
+  IoTEventsAccessRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - iotevents.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      RoleName: line-aws-iot-iotevents-access-role
+
+  CloudWatchLogsPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:CreateLogStream'
+              - 'logs:PutLogEvents'
+            Resource: '*'
+      PolicyName: line-aws-iot-CloudWatchLogsPolicyForLambda
+      Roles:
+        - !Ref ButtonIotRole
+        - !Ref LineGetStatusRole
+        - !Ref IoTEventsPowerOnDetectRole
+        - !Ref IoTLinePushRole
+
+  IoTDataAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'iot:UpdateThingShadow'
+              - 'iot:GetThingShadow'
+            Resource: '*'
+      PolicyName: line-aws-iot-IoTDataAccessPolicyForLambda
+      Roles:
+        - !Ref ButtonIotRole
+        - !Ref LineGetStatusRole
+
+  IoTEventsAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'iotevents:BatchPutMessage'
+            Resource: '*'
+      PolicyName: line-aws-iot-IoTEventsAccessPolicy
+      Roles:
+        - !Ref IotCorePowerOnStatusNotifyRole
+
+  LambdaAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'lambda:InvokeFunction'
+            Resource: !Sub 'arn:aws:lambda:ap-northeast-1:${AWS::AccountId}:function:*'
+      PolicyName: line-aws-iot-LambdaAccessPolicy
+      Roles:
+        - !Ref IoTEventsAccessRole
+
+  IoTLinePushFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: line_iot/
+      Handler: app.lambda_handler
+      Runtime: python3.6
+      FunctionName: line_aws_iot_line_push_message
+      Role: !GetAtt IoTLinePushRole.Arn
+      Environment:
+        Variables:
+          CHANNEL_ACCESS_TOKEN: token
+          LINE_USER_ID: user-id
+      Events:
+        IoTCore:
+          Type: IoTRule
+          Properties:
+            AwsIotSqlVersion: 2016-03-23
+            Sql: "SELECT * FROM '$aws/things/thingUbuntu/shadow/update/accepted'"
+    DependsOn: 
+      - CloudWatchLogsPolicy
+
+  IoTEventsPowerOnDetectFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: line_iot/
+      Handler: app.lambda_iotEvents_powerOnDetect_handler
+      Runtime: python3.6
+      FunctionName: line_aws_iot_iotevents_poweron_detect
+      Role: !GetAtt IoTEventsPowerOnDetectRole.Arn
+      Environment:
+        Variables:
+          CHANNEL_ACCESS_TOKEN: token
+          LINE_USER_ID: user-id
+    DependsOn: 
+      - CloudWatchLogsPolicy
+
+  #IoTEventsPowerOnDetectFunctionPermission:
+  #  Type: AWS::Lambda::Permission
+  #  Properties: 
+  #    Action: lambda:InvokeFunction
+  #    FunctionName: !GetAtt IoTEventsPowerOnDetectFunction.Arn
+  #    Principal: iot.amazonaws.com
+  #    SourceAccount: !Ref AWS::AccountId
+  #    SourceArn: !Sub arn:aws:iot1click:ap-northeast-1:${AWS::AccountId}:projects/*
+
+  ButtonIoTFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: button_iot/
+      Handler: app.lambda_handler
+      Runtime: python3.6
+      FunctionName: line_aws_iot_button_request
+      Role: !GetAtt ButtonIotRole.Arn
+      Environment:
+        Variables:
+          THING_NAME: thingUbuntu
+    DependsOn: 
+      - CloudWatchLogsPolicy
+      - IoTDataAccessPolicy
+
+  ButtonIoTFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt ButtonIoTFunction.Arn
+      Principal: iot1click.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub arn:aws:iot1click:ap-northeast-1:${AWS::AccountId}:projects/*
+
+  LineIoTGetStatusFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: line_iot/
+      Handler: app.lambda_getStatus_handler
+      Runtime: python3.6
+      FunctionName: line_aws_iot_getStatus_iot
+      Role: !GetAtt LineGetStatusRole.Arn
+      Environment:
+        Variables:
+          CHANNEL_ACCESS_TOKEN: token
+          LINE_USER_ID: user-id
+          LINE_CHANNEL_SECRET: secret
+          THING_NAME: thingUbuntu
+      Events:
+        LineBot:
+          Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /status
+            Method: POST
+    DependsOn: 
+      - CloudWatchLogsPolicy
+      - IoTDataAccessPolicy
+
+  IoT1ClickPowerONDevice:
+    Type: AWS::IoT1Click::Device
+    Properties: 
+      DeviceId: deviceid
+      Enabled: True
+
+  IoT1ClickPowerONProject:
+    Type: AWS::IoT1Click::Project
+    Properties:
+      ProjectName: SoracomEntranceLightPowerON
+      PlacementTemplate:
+        DefaultAttributes: # 必須では無いが、この設定を入れておかないと、Internal Failureになる。
+          entrance: 0
+        DeviceTemplates:
+          SoracomEntranceButton:
+            DeviceType: button
+            CallbackOverrides:
+              onClickCallback: !GetAtt ButtonIoTFunction.Arn # AWS::Lambda::Permissionの定義が必要（定義がないとInvoke出来無いと言ってエラーとなる）
+    DependsOn:
+      - ButtonIoTFunctionPermission
+
+  IoT1ClickPowerONPlacement:
+    Type: AWS::IoT1Click::Placement
+    Properties: 
+      AssociatedDevices:
+        SoracomEntranceButton: !GetAtt IoT1ClickPowerONDevice.DeviceId
+      PlacementName: SoracomEntranceButtonPlacement
+      ProjectName: !GetAtt IoT1ClickPowerONProject.ProjectName
+    DependsOn: 
+      - IoT1ClickPowerONProject
+
+  IoTCorePowerOnStatusNotify:
+    Type: AWS::IoT::TopicRule
+    Properties: 
+      RuleName: line_aws_iot_IoTCore2IoTEventsPowerOnNotify
+      TopicRulePayload: 
+        Actions: 
+          - IotEvents: 
+              InputName: light_state_information
+              RoleArn: !GetAtt IotCorePowerOnStatusNotifyRole.Arn
+        AwsIotSqlVersion: 2016-03-23
+        RuleDisabled: false
+        Sql: "SELECT state.reported.powerOn as poweron FROM '$aws/things/thingUbuntu/shadow/update/accepted'"
+  
+  IotEventsPowerOnNotifyDetectorModel:
+    Type: AWS::IoTEvents::DetectorModel
+    Properties: 
+      DetectorModelDefinition: 
+        InitialStateName: "PowerOFF"
+        States:
+          - StateName: "PowerON"
+            OnInput:
+              Events:
+                - EventName: "tout_poweron_check_timer"
+                  Condition: "timeout(\"poweron_check_timer\")"
+                  Actions:
+                    - Lambda:
+                        FunctionArn: !Sub "arn:aws:lambda:ap-northeast-1:${AWS::AccountId}:function:line_aws_iot_iotevents_poweron_detect"
+                    - ResetTimer:
+                        TimerName: "poweron_check_timer"
+              TransitionEvents:
+                - EventName: "to_PowerOFF"
+                  Condition: "$input.light_state_information.poweron == 0"
+                  NextState: "PowerOFF"
+            OnEnter:
+              Events:
+                - EventName: "create_poweron_check_timer"
+                  Condition: "true"
+                  Actions:
+                    - SetTimer:
+                        TimerName: "poweron_check_timer"
+                        Seconds: 60
+            OnExit:
+              Events:
+                - EventName: "delete_poweron_check_timer"
+                  Condition: "true"
+                  Actions:
+                    - ClearTimer:
+                        TimerName: "poweron_check_timer"
+          - StateName: "PowerOFF"
+            OnInput:
+              TransitionEvents:
+                - EventName: "to_PowerON"
+                  Condition: "$input.light_state_information.poweron == 1"
+                  NextState: "PowerON"
+      DetectorModelName: PowerON-Observation
+      EvaluationMethod: SERIAL
+      RoleArn: !GetAtt IoTEventsAccessRole.Arn
+    DependsOn: 
+      - LambdaAccessPolicy
+      - IotEventsPowerOnNotifyInput
+
+  IotEventsPowerOnNotifyInput:
+    Type: AWS::IoTEvents::Input
+    Properties: 
+      InputName: light_state_information
+      InputDefinition: 
+        Attributes:
+          - 
+            JsonPath: "poweron"
+
+  # Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  # HelloWorldApi:
+  #   Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+  #   Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  # HelloWorldFunction:
+  #   Description: "Hello World Lambda Function ARN"
+  #   Value: !GetAtt HelloWorldFunction.Arn
+  # HelloWorldFunctionIamRole:
+  #   Description: "Implicit IAM Role created for Hello World function"
+  #   Value: !GetAtt HelloWorldFunctionRole.Arn
