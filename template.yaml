@@ -169,8 +169,8 @@ Resources:
       Role: !GetAtt IoTLinePushRole.Arn
       Environment:
         Variables:
-          CHANNEL_ACCESS_TOKEN: token
-          LINE_USER_ID: user-id
+          CHANNEL_ACCESS_TOKEN: <channel-access-token>
+          LINE_USER_ID: <line-user-id>
       Events:
         IoTCore:
           Type: IoTRule
@@ -190,8 +190,8 @@ Resources:
       Role: !GetAtt IoTEventsPowerOnDetectRole.Arn
       Environment:
         Variables:
-          CHANNEL_ACCESS_TOKEN: token
-          LINE_USER_ID: user-id
+          CHANNEL_ACCESS_TOKEN: <channel-access-token>
+          LINE_USER_ID: <line-user-id>
     DependsOn: 
       - CloudWatchLogsPolicy
 
@@ -238,9 +238,9 @@ Resources:
       Role: !GetAtt LineGetStatusRole.Arn
       Environment:
         Variables:
-          CHANNEL_ACCESS_TOKEN: token
-          LINE_USER_ID: user-id
-          LINE_CHANNEL_SECRET: secret
+          CHANNEL_ACCESS_TOKEN: <channel-access-token>
+          LINE_USER_ID: <line-user-id>
+          LINE_CHANNEL_SECRET: <line-channel-secret>
           THING_NAME: thingUbuntu
       Events:
         LineBot:
@@ -255,7 +255,7 @@ Resources:
   IoT1ClickPowerONDevice:
     Type: AWS::IoT1Click::Device
     Properties: 
-      DeviceId: deviceid
+      DeviceId: <deviceid>
       Enabled: True
 
   IoT1ClickPowerONProject:
